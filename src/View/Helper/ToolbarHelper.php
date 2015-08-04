@@ -16,6 +16,7 @@ namespace DebugKit\View\Helper;
 use Cake\Cache\Cache;
 use Cake\Datasource\ConnectionManager;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\View\Helper;
 use DebugKit\DebugKitDebugger;
 
@@ -43,6 +44,23 @@ class ToolbarHelper extends Helper
     protected $sort = false;
 
     /**
+     * Passed values backtraces
+     *
+     * @var array
+     */
+    protected $valuesBT = null;
+
+    /**
+     * set sorting of values
+     *
+     * @param bool $sort Whether or not sort values by key
+     */
+    public function setBackTraces($valuesBT)
+    {
+        $this->valuesBT = $valuesBT;
+    }
+
+    /**
      * set sorting of values
      *
      * @param bool $sort Whether or not sort values by key
@@ -56,6 +74,7 @@ class ToolbarHelper extends Helper
      * Recursively goes through an array and makes neat HTML out of it.
      *
      * @param mixed $values Array to make pretty.
+     * @param string $ancestorName name of ancestor property
      * @param int $openDepth Depth to add open class
      * @param int $currentDepth current depth.
      * @param bool $doubleEncode Whether or not to double encode.
@@ -63,7 +82,7 @@ class ToolbarHelper extends Helper
      * the path.
      * @return string
      */
-    public function makeNeatArray($values, $openDepth = 0, $currentDepth = 0, $doubleEncode = false, \SplObjectStorage $currentAncestors = null)
+    public function makeNeatArray($values, $ancestorName = '', $openDepth = 0, $currentDepth = 0, $doubleEncode = false, \SplObjectStorage $currentAncestors = null)
     {
         if ($currentAncestors === null) {
             $ancestors = new \SplObjectStorage();
@@ -78,8 +97,10 @@ class ToolbarHelper extends Helper
         if ($openDepth > $currentDepth) {
             $className .= ' expanded';
         }
+
         $nextDepth = $currentDepth + 1;
-        $out = "<ul class=\"$className\">";
+        $out = "<ul class=\"$className\" title=\"$ancestorName\">";
+
         if (!is_array($values)) {
             if (is_bool($values)) {
                 $values = [$values];
@@ -87,23 +108,74 @@ class ToolbarHelper extends Helper
             if ($values === null) {
                 $values = [null];
             }
-            if (is_object($values) && method_exists($values, 'toArray')) {
-                $values = $values->toArray();
+
+            if (is_object($values)) {
+                if (method_exists($values, 'toArray') && !($values instanceof Entity)) {
+                    try {
+                        $values = $values->toArray();
+                    } catch (\Cake\Database\Exception $e) {
+                        //Likely issue is unbuffered query; fall back to __debugInfo
+                        $values = $values->__debugInfo();
+                    }
+                } elseif (method_exists($values, '__debugInfo')) {
+                    // Convert objects into using __debugInfo.
+                    $values = $values->__debugInfo();
+                }
             }
         }
+
         if (empty($values)) {
             $values[] = '(empty)';
         }
-        if ($this->sort && is_array($values) && $currentDepth === 0) {
-            ksort($values);
+        if ($this->sort && is_array($values)) {
+            ksort($values, SORT_NATURAL | SORT_FLAG_CASE);
         }
+        $last_letter = null;
         foreach ($values as $key => $value) {
-            $out .= '<li><strong>' . h($key, $doubleEncode) . '</strong>';
-            if (is_array($value) && count($value) > 0) {
-                $out .= '(array)';
-            } elseif (is_object($value)) {
-                $out .= '(object)';
+            $name = h($key, $doubleEncode);
+            $current_first_letter = strtoupper(substr($name, 0, 1));
+            $bookmark = '';
+
+            if ($last_letter !== $current_first_letter && $this->sort) {
+                $last_letter = $current_first_letter;
+                $bookmark = '<span>' . $current_first_letter . '</span>';
             }
+
+            $title = '';
+            $last_occurence = '';
+            if ($currentDepth === 0 && $this->valuesBT && isset($this->valuesBT[$name]) && $ancestorName !== false) {
+                $title = ' title="';
+                foreach($this->valuesBT[$name] as $index => $bt) {
+                    $title .= $index !== 0 ? '&#013;' : '';
+                    $last_occurence = 'Line: ' . $bt['line'] . ' File: ' . str_replace(APP, '', $bt['file']);
+                    $last_occurence .= ' Function: ' . $bt['function'];
+                    $title .= $last_occurence;
+
+                }
+                $title .= '"';
+            }
+
+            if ($ancestorName !== false) {
+                $current_path = ($ancestorName !== '' ) ? $ancestorName . '.' . $name : $name;
+            }
+            $out .= '<li' . $title . '>' . $bookmark . '<strong>' . $name . '</strong>';
+            if (is_array($value) && count($value) > 0) {
+                $btn = '<a href="#openModal" class="btn-primary get-as-json" data-name="' . $current_path . '">';
+                $btn .= __d('debug_kit', 'to JSON') . '</a>';
+                $out .= '(array)' . ($ancestorName !== false ? $btn : '');
+                if ($currentDepth === 0 && $this->valuesBT && isset($this->valuesBT[$name])) {
+                    $out .= '<div>' . $last_occurence . '</div>';
+                }
+            } elseif (is_object($value)) {
+                $btn = '<a href="#openModal" class="btn-primary get-as-json" data-name="' . $current_path . '">';
+                $btn .= __d('debug_kit', 'to JSON') . '</a>';
+                $out .= '(object - ' . get_class($value) . ')' . ($ancestorName !== false ? $btn : '');
+                if ($currentDepth === 0 && $this->valuesBT && isset($this->valuesBT[$name])) {
+                    $out .= '<div>' . $last_occurence . '</div>';
+                }
+            }
+
+
             if ($value === null) {
                 $value = '(null)';
             }
@@ -133,10 +205,14 @@ class ToolbarHelper extends Helper
                 $isObject
                 ) && !empty($value)
             ) {
-                $out .= $this->makeNeatArray($value, $openDepth, $nextDepth, $doubleEncode, $ancestors);
+                $out .= $this->makeNeatArray($value, $current_path, $openDepth, $nextDepth, $doubleEncode, $ancestors);
             } else {
                 $out .= h($value, $doubleEncode);
+                if ($currentDepth === 0 && $this->valuesBT && isset($this->valuesBT[$name])) {
+                    $out .= '<div>' . $last_occurence . '</div>';
+                }
             }
+
             $out .= '</li>';
         }
         $out .= '</ul>';

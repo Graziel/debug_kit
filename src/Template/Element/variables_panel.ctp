@@ -17,11 +17,13 @@ endif;
 
 if (!empty($content)):
     printf('<label class="toggle-checkbox"><input type="checkbox" class="neat-array-sort"%s>%s</label>', $sort ? ' checked="checked"' : '', __d('debug_kit', 'Sort variables by name'));
+    $this->Toolbar->setBackTraces($backtraces);
     $this->Toolbar->setSort($sort);
     echo $this->Toolbar->makeNeatArray($content);
 endif;
 
 if (!empty($errors)):
     echo '<h4>Validation errors</h4>';
-    echo $this->Toolbar->makeNeatArray($errors);
+    echo $this->Toolbar->makeNeatArray($errors, false);
 endif;
+?>

@@ -146,9 +146,9 @@ Toolbar.prototype = {
 		lists.find('ul').hide()
 			.parent().addClass('expandable collapsed');
 
-		lists.on('click', 'li', function(event) {
+		lists.on('click', 'li.expandable > strong', function(event) {
 			event.stopPropagation();
-			var el = $(this);
+			var el = $(this).parent();
 			el.children('ul').toggle();
 			el.toggleClass('expanded')
 				.toggleClass('collapsed');

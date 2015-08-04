@@ -64,7 +64,7 @@ $(document).ready(function() {
             type: 'POST'
         });
         xhr.done(function(response) {
-            showMessage(messageEl, name + ' cache cleared.')
+            showMessage(messageEl, name + ' cache cleared.');
         }).error(function(response) {
             showMessage(messageEl, name + ' cache could not be cleared.');
         });

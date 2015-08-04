@@ -50,6 +50,10 @@ Router::plugin('DebugKit', function ($routes) {
         ['controller' => 'Toolbar', 'action' => 'clearCache']
     );
     $routes->connect(
+        '/toolbar/get_as_json/*',
+        ['controller' => 'Toolbar', 'action' => 'getVariableAsJson']
+    );
+    $routes->connect(
         '/toolbar/*',
         ['controller' => 'Requests', 'action' => 'view']
     );

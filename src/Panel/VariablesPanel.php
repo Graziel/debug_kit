@@ -13,17 +13,9 @@
 namespace DebugKit\Panel;
 
 use Cake\Controller\Controller;
-use Cake\Database\Query;
-use Cake\Datasource\EntityInterface;
 use Cake\Event\Event;
-use Cake\Form\Form;
-use Cake\ORM\ResultSet;
-use Cake\Utility\Hash;
 use Closure;
 use DebugKit\DebugPanel;
-use Exception;
-use PDO;
-use SimpleXmlElement;
 
 /**
  * Provides debug information on the View variables.
@@ -70,38 +62,7 @@ class VariablesPanel extends DebugPanel
         $controller = $event->subject();
         $errors = [];
 
-        $walker = function (&$item) use (&$walker) {
-            if ($item instanceof Query || $item instanceof ResultSet) {
-                try {
-                    $item = $item->toArray();
-                } catch (\Cake\Database\Exception $e) {
-                    //Likely issue is unbuffered query; fall back to __debugInfo
-                    $item = array_map($walker, $item->__debugInfo());
-                }
-            } elseif ($item instanceof Closure ||
-                $item instanceof PDO ||
-                $item instanceof SimpleXmlElement
-            ) {
-                $item = 'Unserializable object - ' . get_class($item);
-            } elseif ($item instanceof Exception) {
-                $item = sprintf(
-                    'Unserializable object - %s. Error: %s in %s, line %s',
-                    get_class($item),
-                    $item->getMessage(),
-                    $item->getFile(),
-                    $item->getLine()
-                );
-            } elseif (is_object($item) && method_exists($item, '__debugInfo')) {
-                // Convert objects into using __debugInfo.
-                $item = array_map($walker, $item->__debugInfo());
-            }
-            return $item;
-        };
-        // Copy so viewVars is not mutated.
-        $vars = $controller->viewVars;
-        array_walk_recursive($vars, $walker);
-
-        foreach ($vars as $k => $v) {
+        foreach ($controller->viewVars as $k => $v) {
             // Get the validation errors for Entity
             if ($v instanceof EntityInterface) {
                 $errors[$k] = $this->_getErrors($v);
@@ -114,7 +75,8 @@ class VariablesPanel extends DebugPanel
         }
 
         $this->_data = [
-            'content' => $vars,
+            'content' => $controller->viewVars,
+            'backtraces' => $controller->viewVarsBT,
             'errors' => $errors
         ];
     }

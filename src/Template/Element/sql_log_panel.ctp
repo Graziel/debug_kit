@@ -30,7 +30,17 @@ SqlFormatter::$pre_attributes = 'style="color: #222; background-color: transpare
 <p class="warning">The following Table objects used <code>Cake\ORM\Table</code> instead of a concrete class:</p>
 <ul class="list">
 <?php foreach ($tables as $table): ?>
-    <li><?= h($table) ?></li>
+    <li><?= h($table) ?>
+        <?php if (isset($tablesBT[$table])): ?>
+            <ul>
+                <?php foreach ($tablesBT[$table] as $bt_data): ?>
+                    <li>
+                        <?= __d('debug_kit', "Line: {0} File: {1} Function: {2}", $bt_data['line'], str_replace(APP, '', $bt_data['file']), $bt_data['function']) ?>
+                    </li>
+                <?php endforeach ?>
+            </ul>
+        <?php endif ?>
+    </li>
 <?php endforeach ?>
 </ul>
 <hr />

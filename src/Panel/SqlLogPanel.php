@@ -65,14 +65,12 @@ class SqlLogPanel extends DebugPanel
         }
     }
 
-    /**
-     * Get the data this panel wants to store.
-     *
-     * @return array
-     */
-    public function data()
+    public function shutdown(Event $event)
     {
-        return [
+        $controller = $event->subject();
+
+        $this->_data = [
+            'tablesBT' => $controller->_fallbackedBT,
             'tables' => array_map(function ($table) {
                 return $table->alias();
             }, TableRegistry::genericInstances()),
