@@ -159,17 +159,26 @@ class ToolbarHelper extends Helper
                 $current_path = ($ancestorName !== '' ) ? $ancestorName . '.' . $name : $name;
             }
             $out .= '<li' . $title . '>' . $bookmark . '<strong>' . $name . '</strong>';
-            if (is_array($value) && count($value) > 0) {
-                $btn = '<a href="#openModal" class="btn-primary get-as-json" data-name="' . $current_path . '">';
-                $btn .= __d('debug_kit', 'to JSON') . '</a>';
-                $out .= '(array)' . ($ancestorName !== false ? $btn : '');
-                if ($currentDepth === 0 && $this->valuesBT && isset($this->valuesBT[$name])) {
-                    $out .= '<div>' . $last_occurence . '</div>';
+            if (is_array($value)) {
+                $count = count($value);
+                if ($count > 0) {
+                    $btn = '<a href="#openModal" class="btn-primary get-as-json" data-name="' . $current_path . '">';
+                    $btn .= __d('debug_kit', 'to JSON') . '</a>';
+                    $out .= __d('debug_kit', '(array - {0} elements) {1}', $count, ($ancestorName !== false ? $btn : ''));
+                    if ($currentDepth === 0 && $this->valuesBT && isset($this->valuesBT[$name])) {
+                        $out .= '<div>' . $last_occurence . '</div>';
+                    }
                 }
             } elseif (is_object($value)) {
                 $btn = '<a href="#openModal" class="btn-primary get-as-json" data-name="' . $current_path . '">';
                 $btn .= __d('debug_kit', 'to JSON') . '</a>';
-                $out .= '(object - ' . get_class($value) . ')' . ($ancestorName !== false ? $btn : '');
+                if ($value instanceof \Traversable) {
+                    $count = iterator_count($value);
+                    $out .= __d('debug_kit', '(object - {0} elements - {1}) {2}', $count, get_class($value), ($ancestorName !== false ? $btn : ''));
+                } else {
+                    $out .= '(object - ' . get_class($value) . ')' . ($ancestorName !== false ? $btn : '');
+                }
+
                 if ($currentDepth === 0 && $this->valuesBT && isset($this->valuesBT[$name])) {
                     $out .= '<div>' . $last_occurence . '</div>';
                 }

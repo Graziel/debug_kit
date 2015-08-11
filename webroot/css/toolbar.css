@@ -280,7 +280,7 @@ table tbody tr:nth-child(odd) {
 .neat-array li.expandable.expanded > strong:before {
 	position: relative;
 	left: -3px;
-	content: "\2937 ";
+	content: "\21B3 ";
 }
 .neat-array li.expandable.collapsed > strong:before,
 .neat-array li.expandable.expanded .expandable.collapsed > strong:before {

@@ -14,6 +14,9 @@ namespace DebugKit\Panel;
 
 use Cake\Controller\Controller;
 use Cake\Event\Event;
+use Cake\Datasource\EntityInterface;
+use Cake\Form\Form;
+use Cake\Utility\Hash;
 use Closure;
 use DebugKit\DebugPanel;
 
