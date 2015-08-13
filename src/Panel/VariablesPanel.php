@@ -20,6 +20,9 @@ use Cake\ORM\Query;
 use Cake\Utility\Hash;
 use Closure;
 use DebugKit\DebugPanel;
+use Exception;
+use PDO;
+use SimpleXmlElement;
 
 /**
  * Provides debug information on the View variables.
@@ -68,7 +71,7 @@ class VariablesPanel extends DebugPanel
 
         $walker = function (&$item) use (&$walker) {
             if ($item instanceof Query) {
-                //convert it to array using __debugInfo
+                //convert it to array using __debugInfo - takes care of closue and other unserializables
                 $item = json_decode(json_encode($item->__debugInfo()), true);
             } elseif ($item instanceof Closure ||
                 $item instanceof PDO ||

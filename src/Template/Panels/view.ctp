@@ -1,5 +1,5 @@
-<h2 class="panel-title"><?= h($panel->title) ?></h2>
-<div class="panel-content">
+<h2 class="panel-title"><?= h($panel->title) ?><span id="panel-close" class="button-close">&times;</span></h2>
+<div class="panel-content" id="panel-main-content">
     <?= $this->element($panel->element) ?>
 </div>
 

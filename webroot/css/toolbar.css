@@ -124,7 +124,6 @@ p {
 	bottom: 40px;
 	left: 0;
 	right: 0;
-	overflow-y: auto;
 	transition: top 0.25s ease-out;
 }
 
@@ -150,6 +149,16 @@ p {
 	margin: 0;
 	transition: background-color 300ms linear;
 }
+#panel-main-content {
+    margin-top: 60px;
+    position: absolute;
+    bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+}
+
 .history-mode .panel-title {
 	background: #ab47bc;
 }
@@ -158,9 +167,9 @@ p {
 }
 
 .button-close {
-	position: absolute;
-	top: 15px;
-	right: 15px;
+	float: right;
+	top: 6px;
+    right: 10px;
 	background: rgba(0, 0, 0, 0.3);
 	color: #fff;
 	display: inline-block;
@@ -174,6 +183,7 @@ p {
 	-webkit-border-radius: 15px;
 	vertical-align: middle;
 	cursor: pointer;
+	position: relative;
 }
 .button-close:hover {
 	background: rgba(0, 0, 0, 0.5);

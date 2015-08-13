@@ -4,7 +4,6 @@ use Cake\Core\Configure;
 
 ?>
 <div id="panel-content-container">
-    <span id="panel-close" class="button-close">&times;</span>
     <div id="panel-content">
         <!-- content here -->
     </div>
@@ -38,7 +37,7 @@ $(document).ready(function() {
         button: $('#toolbar'),
         content: $('#panel-content-container'),
         panelButtons: $('.panel'),
-        panelClose: $('#panel-close'),
+        panelClose: '#panel-close',
         keyboardScope : $(document),
         currentRequest: '<?= $toolbar->id ?>',
         originalRequest: '<?= $toolbar->id ?>',
