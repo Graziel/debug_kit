@@ -102,11 +102,12 @@ Toolbar.prototype = {
         }, 250);
     },
 
-    loadPanel: function(id) {
+    loadPanel: function(id, force) {
         var url = baseUrl + 'debug_kit/panels/view/' + id;
         var contentArea = this.content.find('#panel-content');
         var _this = this;
         var timer;
+        force = typeof force !== 'undefined' ? force : false;
         var loader = $('#loader');
 
         if (this._lastPanel != id) {
@@ -130,7 +131,7 @@ Toolbar.prototype = {
             _this.bindNeatArray();
         };
 
-        if (typeof this.cache[url] !== "undefined") {
+        if (typeof this.cache[url] !== "undefined" && !force) {
             show(this.cache[url]);
         } else {
             $.get(url, function(response) {
@@ -149,7 +150,7 @@ Toolbar.prototype = {
             } else {
                 document.cookie = 'debugKit_sort=1; path=' + _this.baseUrl;
             }
-            _this.loadPanel(_this.currentPanel());
+            _this.loadPanel(_this.currentPanel(), true);
         });
 
         var lists = this.content.find('.depth-0');
